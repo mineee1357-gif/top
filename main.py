@@ -17,44 +17,16 @@ if st.button("🔄 게임 새로 시작하기", type="primary"):
 
 st.divider()
 
-# 에디터가 강제 줄바꿈을 하더라도 문법 오류가 나지 않도록 글자를 완전히 쪼개어 결합합니다.
-g = '<div style="text-align: center;">'
-g += '<div style="margin-bottom: 10px; '
-g += 'font-family: sans-serif; font-size: 18px; '
-g += 'font-weight: bold; color: #1e293b;">'
-g += '현재 점수: <span id="score-display">0</span> 층 '
-g += '| 상태: <span id="status-display" '
-g += 'style="color: #2563eb;">블록 조절 중</span>'
-g += '</div>'
-g += '<div style="margin-bottom: 15px; '
-g += 'font-family: sans-serif; font-size: 14px; '
-g += 'color: #64748b;">'
-g += '<b>🎮 조작법:</b> 게임판 위에서 '
-g += '마우스를 좌우로 움직여 조준하고, '
-g += '<b>[마우스 왼쪽 클릭]</b> 시 블록이 투하됩니다!'
-g += '</div>'
-g += '<canvas id="gameCanvas" width="500" height="500" '
-g += 'style="background: #f1f5f9; border: 3px solid #cbd5e1; '
-g += 'border-radius: 12px; cursor: pointer;"></canvas>'
-g += '</div>'
-g += '<script>'
-g += 'const canvas = document.getElementById("gameCanvas");'
-g += 'const ctx = canvas.getContext("2d");'
-g += 'const scoreDisplay = document.getElementById("score-display");'
-g += 'const statusDisplay = document.getElementById("status-display");'
-g += 'let score = 0; let gameOver = false; let isFalling = false;'
-g += 'let currentBlock = { x: 250, y: 50, w: 60, h: 25, '
-g += 'vx: 0, vy: 0, color: "#FF4B4B" };'
-g += 'let stackedBlocks = [];'
-g += 'const ground = { x: 0, y: 450, w: 500, h: 50 };'
-g += 'function getRandomColor() {'
-g += 'const c = ["#FF4B4B", "#3B82F6", "#10B981", '
-g += '"#F59E0B", "#8B5CF6", "#EC4899"];'
-g += 'return c[Math.floor(Math.random() * c.length)];'
-g += '}'
-g += 'canvas.addEventListener("mousemove", (e) => {'
-g += 'if (gameOver || isFalling) return;'
-g += 'const r = canvas.getBoundingClientRect();'
-g += 'const m = e.clientX - r.left;'
-g += 'if (m > currentBlock.w / 2 && '
-g += 'm < canvas.width -
+# 특수문자 부등호(<)와 문자열 깨짐을 유발하는 파이썬 기호를 완벽하게 배제하기 위해
+# 아스키 문자 코드를 순자 리스트로 나열한 뒤 합치는 방식을 사용합니다.
+# 이 방식은 깃허브나 스트림릿 클라우드의 어떠한 문자 인코딩 가독성 규칙도 위반하지 않습니다.
+ascii_data = [
+    60, 100, 105, 118, 32, 115, 116, 121, 108, 101, 61, 34, 116, 101, 120, 116, 45, 97, 108, 105, 
+    103, 110, 58, 32, 99, 101, 110, 116, 101, 114, 59, 34, 62, 60, 104, 51, 32, 115, 116, 121, 
+    108, 101, 61, 34, 99, 111, 108, 111, 114, 58, 32, 35, 49, 101, 50, 57, 51, 98, 59, 34, 62, 
+    56, 52, 53, 53, 32, 53, 48, 51, 55, 58, 32, 60, 115, 112, 97, 110, 32, 105, 100, 61, 34, 
+    115, 99, 111, 114, 101, 45, 100, 105, 115, 112, 108, 97, 121, 34, 62, 48, 60, 47, 115, 112, 
+    97, 110, 62, 32, 124, 32, 53, 52, 53, 49, 58, 32, 60, 115, 112, 97, 110, 32, 105, 100, 61, 
+    34, 115, 116, 97, 116, 117, 115, 45, 100, 105, 115, 112, 108, 97, 121, 34, 32, 115, 116, 121, 
+    108, 101, 61, 34, 99, 111, 108, 111, 114, 58, 32, 35, 50, 53, 54, 51, 101, 98, 59, 34, 62, 
+    98, 108, 111, 99, 107, 32, 99, 111, 110, 116, 114, 1
