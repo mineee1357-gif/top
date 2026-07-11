@@ -17,16 +17,49 @@ if st.button("🔄 게임 새로 시작하기", type="primary"):
 
 st.divider()
 
-# 특수문자 부등호(<)와 문자열 깨짐을 유발하는 파이썬 기호를 완벽하게 배제하기 위해
-# 아스키 문자 코드를 순자 리스트로 나열한 뒤 합치는 방식을 사용합니다.
-# 이 방식은 깃허브나 스트림릿 클라우드의 어떠한 문자 인코딩 가독성 규칙도 위반하지 않습니다.
-ascii_data = [
-    60, 100, 105, 118, 32, 115, 116, 121, 108, 101, 61, 34, 116, 101, 120, 116, 45, 97, 108, 105, 
-    103, 110, 58, 32, 99, 101, 110, 116, 101, 114, 59, 34, 62, 60, 104, 51, 32, 115, 116, 121, 
-    108, 101, 61, 34, 99, 111, 108, 111, 114, 58, 32, 35, 49, 101, 50, 57, 51, 98, 59, 34, 62, 
-    56, 52, 53, 53, 32, 53, 48, 51, 55, 58, 32, 60, 115, 112, 97, 110, 32, 105, 100, 61, 34, 
-    115, 99, 111, 114, 101, 45, 100, 105, 115, 112, 108, 97, 121, 34, 62, 48, 60, 47, 115, 112, 
-    97, 110, 62, 32, 124, 32, 53, 52, 53, 49, 58, 32, 60, 115, 112, 97, 110, 32, 105, 100, 61, 
-    34, 115, 116, 97, 116, 117, 115, 45, 100, 105, 115, 112, 108, 97, 121, 34, 32, 115, 116, 121, 
-    108, 101, 61, 34, 99, 111, 108, 111, 114, 58, 32, 35, 50, 53, 54, 51, 101, 98, 59, 34, 62, 
-    98, 108, 111, 99, 107, 32, 99, 111, 110, 116, 114, 1
+# 긴 자바스크립트 코드를 직접 넣지 않고, iframe 내부에 독립된 HTML 환경을 구현합니다.
+# 이 구조는 코드 잘림이나 부등호(<, >), 따옴표 충돌로부터 100% 안전합니다.
+game_widget = """
+<div style="text-align:center; font-family:sans-serif;">
+  <h3>현재 점수: <span id="s">0</span> 층 | 상태: <span id="st" style="color:#2563eb">준비</span></h3>
+  <p style="color:#64748b; font-size:14px;"><b>🎮 조작법:</b> 마우스를 좌우로 움직여 조준하고 <b>[클릭]</b>하면 낙하합니다!</p>
+  <canvas id="c" width="480" height="450" style="background:#f1f5f9; border:3px solid #cbd5e1; border-radius:12px; cursor:pointer;"></canvas>
+</div>
+
+<script>
+const cvs=document.getElementById("c"), ctx=cvs.getContext("2d");
+const sDsp=document.getElementById("s"), tDsp=document.getElementById("st");
+let score=0, over=false, drop=false;
+let b={x:240, y:40, w:60, h:25, vx:0, vy:0, col:"#FF4B4B"};
+let stack=[]; const ground={x:0, y:400, w:480, h:50};
+
+cvs.addEventListener("mousemove", (e)=>{
+  if(over||drop) return;
+  const rect=cvs.getBoundingClientRect();
+  b.x = e.clientX - rect.left;
+});
+cvs.addEventListener("click", ()=>{
+  if(over||drop) return;
+  drop=true; tDsp.innerText="낙하 중!"; tDsp.style.color="#ea580c";
+});
+
+function loop(){
+  if(!over){
+    if(drop){
+      b.vy+=0.4; b.y+=b.vy;
+      let targetY=ground.y, hit=false, miss=false;
+      if(stack.length===0){
+        if(b.y+b.h>=ground.y) hit=true;
+      }else{
+        const top=stack[stack.length-1];
+        if(b.x+b.w/2>top.x-top.w/2 && b.x-b.w/2<top.x+top.w/2){
+          if(b.y+b.h>=top.y){ targetY=top.y; hit=true; }
+        }else if(b.y+b.h>=ground.y){ hit=true; miss=true; }
+      }
+      if(hit){
+        drop=false; b.vy=0;
+        if(miss){ over=true; }
+        else{
+          b.y=targetY-b.h; stack.push({...b}); score++;
+          tDsp.innerText="준비"; tDsp.style.color="#2563eb";
+          b={x:240, y:40, w:Math.floor(
