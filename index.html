@@ -1,0 +1,121 @@
+<div style="text-align: center; font-family: sans-serif;">
+  <h3>현재 점수: <span id="score">0</span> 층 | 상태: <span id="status" style="color: #2563eb;">블록 조절 중</span></h3>
+  <p style="color: #64748b; font-size: 14px;"><b>🎮 조작법:</b> 마우스를 좌우로 움직여 조준하고 <b>[마우스 클릭]</b> 시 블록이 떨어집니다!</p>
+  <canvas id="gameCanvas" width="480" height="420" style="background: #f1f5f9; border: 3px solid #cbd5e1; border-radius: 12px; cursor: pointer;"></canvas>
+</div>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const scoreDisplay = document.getElementById("score");
+const statusDisplay = document.getElementById("status");
+
+let score = 0;
+let gameOver = false;
+let isFalling = false;
+
+let currentBlock = { x: 240, y: 40, w: 60, h: 25, vx: 0, vy: 0, color: "#FF4B4B" };
+let stackedBlocks = [];
+const ground = { x: 0, y: 380, w: 480, h: 40 };
+
+canvas.addEventListener("mousemove", (e) => {
+  if (gameOver || isFalling) return;
+  const rect = canvas.getBoundingClientRect();
+  currentBlock.x = e.clientX - rect.left;
+});
+
+canvas.addEventListener("click", () => {
+  if (gameOver || isFalling) return;
+  isFalling = true;
+  statusDisplay.innerText = "낙하 중! 💥";
+  statusDisplay.style.color = "#ea580c";
+});
+
+function loop() {
+  if (!gameOver) {
+    if (isFalling) {
+      currentBlock.vy += 0.4;
+      currentBlock.y += currentBlock.vy;
+      
+      let targetY = ground.y;
+      let hit = false;
+      let miss = false;
+      
+      if (stackedBlocks.length === 0) {
+        if (currentBlock.y + currentBlock.h >= ground.y) hit = true;
+      } else {
+        const top = stackedBlocks[stackedBlocks.length - 1];
+        if (currentBlock.x + currentBlock.w/2 > top.x - top.w/2 && currentBlock.x - currentBlock.w/2 < top.x + top.w/2) {
+          if (currentBlock.y + currentBlock.h >= top.y) {
+            targetY = top.y;
+            hit = true;
+          }
+        } else if (currentBlock.y + currentBlock.h >= ground.y) {
+          hit = true;
+          miss = true;
+        }
+      }
+      
+      if (hit) {
+        isFalling = false;
+        currentBlock.vy = 0;
+        if (miss) {
+          gameOver = true;
+        } else {
+          currentBlock.y = targetY - currentBlock.h;
+          stackedBlocks.push(Object.assign({}, currentBlock));
+          score++;
+          statusDisplay.innerText = "블록 조절 중";
+          statusDisplay.style.color = "#2563eb";
+          currentBlock = {
+            x: 240,
+            y: 40,
+            w: Math.floor(Math.random() * 25) + 40,
+            h: 22,
+            vx: 0,
+            vy: 0,
+            color: ["#3B82F6", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899"][Math.floor(Math.random() * 5)]
+          };
+        }
+        scoreDisplay.innerText = score;
+      }
+    }
+    
+    ctx.clearRect(0, 0, 480, 420);
+    ctx.fillStyle = "#475569";
+    ctx.fillRect(ground.x, ground.y, ground.w, ground.h);
+    
+    stackedBlocks.forEach(b => {
+      ctx.fillStyle = b.color;
+      ctx.fillRect(b.x - b.w/2, b.y, b.w, b.h);
+      ctx.strokeStyle = "#1e293b";
+      ctx.strokeRect(b.x - b.w/2, b.y, b.w, b.h);
+    });
+    
+    ctx.fillStyle = currentBlock.color;
+    ctx.fillRect(currentBlock.x - currentBlock.w/2, currentBlock.y, currentBlock.w, currentBlock.h);
+    ctx.strokeStyle = "#1e293b";
+    ctx.strokeRect(currentBlock.x - currentBlock.w/2, currentBlock.y, currentBlock.w, currentBlock.h);
+    
+    if (!isFalling && !gameOver) {
+      ctx.strokeStyle = "rgba(148, 163, 184, 0.4)";
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(currentBlock.x, currentBlock.y + currentBlock.h);
+      ctx.lineTo(currentBlock.x, ground.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  } else {
+    statusDisplay.innerText = "게임 오버! 💥";
+    statusDisplay.style.color = "#dc2626";
+    ctx.fillStyle = "rgba(220, 38, 38, 0.1)";
+    ctx.fillRect(0, 0, 480, 420);
+    ctx.fillStyle = "#dc2626";
+    ctx.font = "bold 32px sans-serif";
+    ctx.fillText("GAME OVER", 145, 190);
+  }
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
