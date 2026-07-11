@@ -1,6 +1,11 @@
 <div style="text-align: center; font-family: sans-serif;">
   <h3>현재 점수: <span id="score">0</span> 층 | 상태: <span id="status" style="color: #2563eb;">블록 조절 중</span></h3>
-  <p style="color: #64748b; font-size: 14px;"><b>🎮 조작법:</b> 마우스를 좌우로 움직여 조준하고 <b>[마우스 클릭]</b> 시 블록이 떨어집니다!</p>
+  
+  <button id="resetBtn" style="margin-bottom: 15px; padding: 8px 16px; background-color: #ff4b4b; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    🔄 게임 리셋하기
+  </button>
+  
+  <p style="color: #64748b; font-size: 14px; margin-top: 5px;"><b>🎮 조작법:</b> 마우스를 좌우로 움직여 조준하고 <b>[마우스 클릭]</b> 시 블록이 떨어집니다!</p>
   <canvas id="gameCanvas" width="480" height="420" style="background: #f1f5f9; border: 3px solid #cbd5e1; border-radius: 12px; cursor: pointer;"></canvas>
 </div>
 
@@ -9,14 +14,26 @@ const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 const scoreDisplay = document.getElementById("score");
 const statusDisplay = document.getElementById("status");
+const resetBtn = document.getElementById("resetBtn");
 
-let score = 0;
-let gameOver = false;
-let isFalling = false;
-
-let currentBlock = { x: 240, y: 40, w: 60, h: 25, vx: 0, vy: 0, color: "#FF4B4B" };
-let stackedBlocks = [];
+let score, gameOver, isFalling, currentBlock, stackedBlocks;
 const ground = { x: 0, y: 380, w: 480, h: 40 };
+
+// 게임 상태를 처음으로 되돌리는 함수
+function initGame() {
+  score = 0;
+  gameOver = false;
+  isFalling = false;
+  currentBlock = { x: 240, y: 40, w: 60, h: 25, vx: 0, vy: 0, color: "#FF4B4B" };
+  stackedBlocks = [];
+  
+  scoreDisplay.innerText = "0";
+  statusDisplay.innerText = "블록 조절 중";
+  statusDisplay.style.color = "#2563eb";
+}
+
+// 리셋 버튼 클릭 이벤트 연결
+resetBtn.addEventListener("click", initGame);
 
 canvas.addEventListener("mousemove", (e) => {
   if (gameOver || isFalling) return;
@@ -117,5 +134,8 @@ function loop() {
   }
   requestAnimationFrame(loop);
 }
+
+// 게임 최초 실행
+initGame();
 loop();
 </script>
